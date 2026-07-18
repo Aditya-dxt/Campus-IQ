@@ -5,7 +5,8 @@ class Settings(BaseSettings):
     APP_NAME: str = "CampusIQ Backend"
     ENVIRONMENT: str = "development"
 
-    DATABASE_URL: str
+    DATABASE_URL: str 
+    DIRECT_URL: str
 
     SECRET_KEY: str
 
