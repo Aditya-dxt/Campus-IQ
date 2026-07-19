@@ -4,6 +4,17 @@ from sqlalchemy.orm import Session
 from app.db.dependencies import get_db
 from app.schemas.auth import UserRegister, UserResponse
 from app.services.auth_service import register_user
+from app.schemas.auth import (
+    Token,
+    UserLogin,
+    UserRegister,
+    UserResponse,
+)
+
+from app.services.auth_service import (
+    login_user,
+    register_user,
+)
 
 router = APIRouter(
     prefix="/auth",
@@ -25,5 +36,31 @@ def register(
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    
+@router.post(
+    "/login",
+    response_model=Token,
+)
+def login(
+    credentials: UserLogin,
+    db: Session = Depends(get_db),
+):
+    try:
+        token = login_user(
+            db,
+            credentials.email,
+            credentials.password,
+        )
+
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
         )

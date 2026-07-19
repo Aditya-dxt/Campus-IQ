@@ -4,6 +4,12 @@ from sqlalchemy.orm import Session
 from app.core.security import hash_password
 from app.models.user import User, UserRole
 from app.schemas.auth import UserRegister
+from sqlalchemy import select
+
+from app.core.security import (
+    create_access_token,
+    verify_password,
+)
 
 
 def register_user(
@@ -34,3 +40,32 @@ def register_user(
     db.refresh(user)
 
     return user
+def login_user(
+    db: Session,
+    email: str,
+    password: str,
+) -> str:
+    """
+    Authenticate a user and return a JWT access token.
+    """
+
+    user = db.scalar(
+        select(User).where(User.email == email)
+    )
+
+    if not user:
+        raise ValueError("Invalid email or password")
+
+    if not verify_password(
+        password,
+        user.password_hash,
+    ):
+        raise ValueError("Invalid email or password")
+
+    token = create_access_token(
+        {
+            "sub": str(user.id),
+        }
+    )
+
+    return token

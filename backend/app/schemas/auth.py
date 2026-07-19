@@ -1,7 +1,6 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from uuid import UUID
-
-
+from pydantic import BaseModel, EmailStr
 class UserRegister(BaseModel):
     full_name: str = Field(min_length=2, max_length=100)
     email: EmailStr
@@ -17,3 +16,11 @@ class UserResponse(BaseModel):
     is_verified: bool
 
     model_config = ConfigDict(from_attributes=True)
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
