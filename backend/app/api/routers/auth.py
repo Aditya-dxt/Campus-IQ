@@ -15,7 +15,9 @@ from app.services.auth_service import (
     login_user,
     register_user,
 )
-
+from app.api.dependencies import get_current_user
+from app.models.user import User
+from fastapi.security import OAuth2PasswordRequestForm
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
@@ -44,14 +46,14 @@ def register(
     response_model=Token,
 )
 def login(
-    credentials: UserLogin,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
     try:
         token = login_user(
             db,
-            credentials.email,
-            credentials.password,
+            form_data.username,   # Enter email in the username field
+            form_data.password,
         )
 
         return {
@@ -64,3 +66,11 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
         )
+@router.get(
+    "/me",
+    response_model=UserResponse,
+)
+def read_current_user(
+    current_user: User = Depends(get_current_user),
+):
+    return current_user
