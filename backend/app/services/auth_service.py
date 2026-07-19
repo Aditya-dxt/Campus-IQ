@@ -1,0 +1,36 @@
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.security import hash_password
+from app.models.user import User, UserRole
+from app.schemas.auth import UserRegister
+
+
+def register_user(
+    db: Session,
+    user_data: UserRegister,
+) -> User:
+    """
+    Register a new user.
+    Raises ValueError if email already exists.
+    """
+
+    existing_user = db.scalar(
+        select(User).where(User.email == user_data.email)
+    )
+
+    if existing_user:
+        raise ValueError("Email already registered")
+
+    user = User(
+        full_name=user_data.full_name,
+        email=user_data.email,
+        password_hash=hash_password(user_data.password),
+        role=UserRole.STUDENT,
+    )
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return user
