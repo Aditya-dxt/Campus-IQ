@@ -28,6 +28,7 @@ class ResumeResponse(BaseModel):
     file_name: str
     file_type: str
     file_size: int
+    parsed_text: str | None
     is_active: bool
     created_at: datetime
     updated_at: datetime

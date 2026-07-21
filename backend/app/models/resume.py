@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from typing import TYPE_CHECKING
+from sqlalchemy import Text
 if TYPE_CHECKING:
     from app.models.user import User
 
@@ -57,6 +58,10 @@ class Resume(Base):
         Integer,
         nullable=False,
     )
+    parsed_text: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+)
 
     is_active: Mapped[bool] = mapped_column(
         Boolean,
