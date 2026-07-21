@@ -6,8 +6,7 @@ from sqlalchemy.orm import Session
 from app.models.resume import Resume
 from app.models.user import User
 from app.schemas.resume import ResumeCreate, ResumeUpdate
-
-
+from app.services.resume_parser import extract_resume_text
 def create_resume(
     db: Session,
     title: str,
@@ -17,9 +16,10 @@ def create_resume(
     file_type: str,
     file_size: int,
 ) -> Resume:
-    """
-    Create a new resume.
-    """
+
+    parsed_text = extract_resume_text(file_path)
+
+    
 
     resume = Resume(
         user_id=current_user.id,
@@ -28,6 +28,7 @@ def create_resume(
         file_path=file_path,
         file_type=file_type,
         file_size=file_size,
+        parsed_text=parsed_text,
         is_active=True,
     )
 
@@ -36,7 +37,6 @@ def create_resume(
     db.refresh(resume)
 
     return resume
-
 
 def get_my_resumes(
     db: Session,
