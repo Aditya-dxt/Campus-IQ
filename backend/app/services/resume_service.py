@@ -10,7 +10,7 @@ from app.schemas.resume import ResumeCreate, ResumeUpdate
 
 def create_resume(
     db: Session,
-    resume_data: ResumeCreate,
+    title: str,
     current_user: User,
     file_name: str,
     file_path: str,
@@ -18,12 +18,12 @@ def create_resume(
     file_size: int,
 ) -> Resume:
     """
-    Create a new resume for the authenticated user.
+    Create a new resume.
     """
 
     resume = Resume(
         user_id=current_user.id,
-        title=resume_data.title,
+        title=title,
         file_name=file_name,
         file_path=file_path,
         file_type=file_type,
@@ -94,13 +94,18 @@ def update_resume(
     return resume
 
 
+from app.utils.file_storage import delete_file
+
+
 def delete_resume(
     db: Session,
     resume: Resume,
 ) -> None:
     """
-    Delete a resume.
+    Delete a resume and its uploaded file.
     """
+
+    delete_file(resume.file_path)
 
     db.delete(resume)
     db.commit()

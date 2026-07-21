@@ -3,7 +3,10 @@ from uuid import UUID
 from fastapi import (
     APIRouter,
     Depends,
+    File,
+    Form,
     HTTPException,
+    UploadFile,
     status,
 )
 from sqlalchemy.orm import Session
@@ -11,12 +14,14 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user
 from app.db.dependencies import get_db
 from app.models.user import User
-from app.schemas.resume import (
-    ResumeCreate,
-    ResumeResponse,
-    ResumeUpdate,
-)
+from app.schemas.resume import ResumeResponse, ResumeUpdate
 from app.services import resume_service
+from app.utils.file_storage import (
+    generate_filename,
+    save_file,
+    validate_extension,
+    validate_file_size,
+)
 
 router = APIRouter(
     prefix="/resumes",
@@ -29,24 +34,36 @@ router = APIRouter(
     response_model=ResumeResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_resume(
-    resume_data: ResumeCreate,
+def upload_resume(
+    title: str = Form(...),
+    file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
-    Create a new resume.
+    Upload a resume.
     """
 
     try:
+        extension = validate_extension(file.filename)
+
+        file_size = validate_file_size(file)
+
+        stored_filename = generate_filename(extension)
+
+        file_path = save_file(
+            file=file,
+            filename=stored_filename,
+        )
+
         return resume_service.create_resume(
             db=db,
-            resume_data=resume_data,
+            title=title,
             current_user=current_user,
-            file_name="resume.pdf",
-            file_path="uploads/resumes/resume.pdf",
-            file_type="pdf",
-            file_size=0,
+            file_name=file.filename,
+            file_path=file_path,
+            file_type=extension,
+            file_size=file_size,
         )
 
     except ValueError as e:
@@ -143,6 +160,8 @@ def delete_resume(
             db=db,
             resume=resume,
         )
+
+        return
 
     except ValueError as e:
         raise HTTPException(
