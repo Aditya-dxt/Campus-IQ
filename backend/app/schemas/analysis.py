@@ -5,8 +5,6 @@ from pydantic import BaseModel
 
 class ResumeAnalysisResponse(BaseModel):
     status: str
-    message: str
-
-    model_config = {
-        "from_attributes": True
-    }
+    score: float | None = None
+    feedback: str | None = None
+    analyzed_at: datetime | None = None

@@ -14,6 +14,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from typing import TYPE_CHECKING
 from sqlalchemy import Text
+from datetime import datetime
+from sqlalchemy import Float, Text, DateTime
 if TYPE_CHECKING:
     from app.models.user import User
 
@@ -60,6 +62,24 @@ class Resume(Base):
     )
     parsed_text: Mapped[str | None] = mapped_column(
         Text,
+        nullable=True,
+)    
+    ats_score: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+)
+
+    analysis_status: Mapped[str] = mapped_column(
+        default="pending",
+)
+
+    analysis_feedback: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+)
+
+    analyzed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
 )
 

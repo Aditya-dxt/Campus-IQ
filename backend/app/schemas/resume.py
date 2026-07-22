@@ -29,6 +29,13 @@ class ResumeResponse(BaseModel):
     file_type: str
     file_size: int
     parsed_text: str | None
+
+    # AI Analysis Fields
+    ats_score: float | None = None
+    analysis_status: str
+    analysis_feedback: str | None = None
+    analyzed_at: datetime | None = None
+
     is_active: bool
     created_at: datetime
     updated_at: datetime

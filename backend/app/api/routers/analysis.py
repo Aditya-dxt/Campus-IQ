@@ -14,6 +14,8 @@ router = APIRouter(
     prefix="/analysis",
     tags=["Analysis"],
 )
+
+
 @router.post(
     "/resume/{resume_id}",
     response_model=ResumeAnalysisResponse,
@@ -24,18 +26,43 @@ def analyze_uploaded_resume(
     current_user: User = Depends(get_current_user),
 ):
     try:
+        # Fetch the resume
         resume = resume_service.get_resume_by_id(
             db=db,
             resume_id=resume_id,
             current_user=current_user,
         )
 
-        return analyze_resume(
-            resume.parsed_text or ""
+        # Run AI analysis
+        result = analyze_resume(resume.parsed_text or "")
+
+        # Save analysis results
+        resume.ats_score = result["score"]
+        resume.analysis_status = result["status"]
+        resume.analysis_feedback = result["feedback"]
+        resume.analyzed_at = result["analyzed_at"]
+
+        # Commit changes
+        db.commit()
+        db.refresh(resume)
+
+        # Return response
+        return ResumeAnalysisResponse(
+            status=resume.analysis_status,
+            score=resume.ats_score,
+            feedback=resume.analysis_feedback,
+            analyzed_at=resume.analyzed_at,
         )
 
     except ValueError as e:
         raise HTTPException(
             status_code=404,
             detail=str(e),
+        )
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Analysis failed: {str(e)}",
         )
