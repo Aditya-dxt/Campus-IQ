@@ -4,10 +4,6 @@ from uuid import uuid4
 
 from fastapi import UploadFile
 
-# Base upload directory
-UPLOAD_DIR = Path("uploads/resumes")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {
     ".pdf",
@@ -79,15 +75,25 @@ def generate_filename(extension: str) -> str:
 def save_file(
     file: UploadFile,
     filename: str,
+    folder: str = "resumes",
 ) -> str:
     """
     Save uploaded file to local storage.
+
+    Args:
+        file: Uploaded file
+        filename: Generated unique filename
+        folder: Upload subfolder
+                e.g. 'resumes', 'study_materials'
 
     Returns:
         Relative file path stored in database.
     """
 
-    destination = UPLOAD_DIR / filename
+    upload_dir = Path("uploads") / folder
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    destination = upload_dir / filename
 
     with destination.open("wb") as buffer:
         copyfileobj(file.file, buffer)

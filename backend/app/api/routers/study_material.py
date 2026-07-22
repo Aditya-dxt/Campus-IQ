@@ -14,8 +14,12 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user
 from app.db.dependencies import get_db
 from app.models.user import User
-from app.schemas.resume import ResumeResponse, ResumeUpdate
-from app.services import resume_service
+from app.schemas.study_material import (
+    StudyMaterialCreate,
+    StudyMaterialResponse,
+    StudyMaterialUpdate,
+)
+from app.services import study_material_service
 from app.utils.file_storage import (
     generate_filename,
     save_file,
@@ -24,48 +28,51 @@ from app.utils.file_storage import (
 )
 
 router = APIRouter(
-    prefix="/resumes",
-    tags=["Resume"],
+    prefix="/study-materials",
+    tags=["Study Materials"],
 )
 
 
 @router.post(
     "",
-    response_model=ResumeResponse,
+    response_model=StudyMaterialResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def upload_resume(
+def upload_study_material(
     title: str = Form(...),
+    description: str | None = Form(None),
+    subject: str = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
-    Upload a resume.
+    Upload study material.
     """
 
     try:
-        # Validate file extension
         extension = validate_extension(file.filename)
 
-        # Validate file size
         file_size = validate_file_size(file)
 
-        # Generate unique filename
         filename = generate_filename(extension)
 
-        # Save file inside uploads/resumes/
         file_path = save_file(
             file=file,
             filename=filename,
-            folder="resumes",
+            folder="study_materials",
         )
 
-        # Store metadata in database
-        return resume_service.create_resume(
-            db=db,
+        data = StudyMaterialCreate(
             title=title,
+            description=description,
+            subject=subject,
+        )
+
+        return study_material_service.create_study_material(
+            db=db,
             current_user=current_user,
+            data=data,
             file_name=file.filename,
             file_path=file_path,
             file_type=extension,
@@ -81,37 +88,31 @@ def upload_resume(
 
 @router.get(
     "",
-    response_model=list[ResumeResponse],
+    response_model=list[StudyMaterialResponse],
 )
-def get_my_resumes(
+def get_study_materials(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Get all resumes uploaded by the current user.
-    """
-    return resume_service.get_my_resumes(
+    return study_material_service.get_study_materials(
         db=db,
         current_user=current_user,
     )
 
 
 @router.get(
-    "/{resume_id}",
-    response_model=ResumeResponse,
+    "/{material_id}",
+    response_model=StudyMaterialResponse,
 )
-def get_resume(
-    resume_id: UUID,
+def get_study_material(
+    material_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Get a specific resume.
-    """
     try:
-        return resume_service.get_resume_by_id(
+        return study_material_service.get_study_material(
             db=db,
-            resume_id=resume_id,
+            material_id=material_id,
             current_user=current_user,
         )
 
@@ -123,29 +124,26 @@ def get_resume(
 
 
 @router.put(
-    "/{resume_id}",
-    response_model=ResumeResponse,
+    "/{material_id}",
+    response_model=StudyMaterialResponse,
 )
-def update_resume(
-    resume_id: UUID,
-    resume_data: ResumeUpdate,
+def update_study_material(
+    material_id: UUID,
+    data: StudyMaterialUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Update resume details.
-    """
     try:
-        resume = resume_service.get_resume_by_id(
+        material = study_material_service.get_study_material(
             db=db,
-            resume_id=resume_id,
+            material_id=material_id,
             current_user=current_user,
         )
 
-        return resume_service.update_resume(
+        return study_material_service.update_study_material(
             db=db,
-            resume=resume,
-            resume_data=resume_data,
+            material=material,
+            data=data,
         )
 
     except ValueError as e:
@@ -156,27 +154,24 @@ def update_resume(
 
 
 @router.delete(
-    "/{resume_id}",
+    "/{material_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_resume(
-    resume_id: UUID,
+def delete_study_material(
+    material_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Soft delete a resume.
-    """
     try:
-        resume = resume_service.get_resume_by_id(
+        material = study_material_service.get_study_material(
             db=db,
-            resume_id=resume_id,
+            material_id=material_id,
             current_user=current_user,
         )
 
-        resume_service.delete_resume(
+        study_material_service.delete_study_material(
             db=db,
-            resume=resume,
+            material=material,
         )
 
         return
