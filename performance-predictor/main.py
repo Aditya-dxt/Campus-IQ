@@ -27,5 +27,35 @@ test_loss = average_log_loss(y_test, y_hat_test)
 print("Test Loss:", test_loss)
 
 predictions = (y_hat_test >= 0.5).astype(int)
-accuracy = (np.mean(predictions == y_test))*100
+accuracy = (np.mean(predictions == y_test))
 print("Test Accuracy:", accuracy)
+
+TP = np.sum((predictions == 1) & (y_test == 1))
+TN = np.sum((predictions == 0) & (y_test == 0))
+FP = np.sum((predictions == 1) & (y_test == 0))
+FN = np.sum((predictions == 0) & (y_test == 1))
+precision = (TP/(TP+FP))
+recall = (TP/(TP+FN))
+
+print("Precision:", precision)
+print("Recall:", recall)
+
+
+print(f"TP={TP}, FP={FP}, FN={FN}, TN={TN}")
+
+f1 = 2 * (precision * recall) / (precision + recall)
+print("F1 Score:", f1)
+
+from sklearn.tree import DecisionTreeClassifier
+
+tree_model = DecisionTreeClassifier(max_depth=3, random_state=42)
+tree_model.fit(X_train_scaled, y_train)
+
+y_pred_tree = tree_model.predict(X_test_scaled)
+
+tree_accuracy = np.mean(y_pred_tree == y_test)
+print("Tree Test Accuracy:", tree_accuracy)
+
+y_pred_tree_train = tree_model.predict(X_train_scaled)
+tree_train_accuracy = np.mean(y_pred_tree_train == y_train)
+print("Tree Train Accuracy:", tree_train_accuracy)
