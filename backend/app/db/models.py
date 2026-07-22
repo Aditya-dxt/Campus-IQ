@@ -1,4 +1,15 @@
-# This file will import all database models.
+"""
+Import all SQLAlchemy models here.
 
-# Example:
-# from app.models.user import User
+Alembic imports this file so that Base.metadata
+contains every table in the project.
+"""
+
+from app.models.resume import Resume
+from app.models.user import User
+from app.models.study_material import StudyMaterial
+
+__all__ = [
+    "User",
+    "Resume",
+]

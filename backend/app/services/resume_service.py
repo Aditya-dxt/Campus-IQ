@@ -1,0 +1,111 @@
+from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.models.resume import Resume
+from app.models.user import User
+from app.schemas.resume import ResumeCreate, ResumeUpdate
+from app.services.resume_parser import extract_resume_text
+def create_resume(
+    db: Session,
+    title: str,
+    current_user: User,
+    file_name: str,
+    file_path: str,
+    file_type: str,
+    file_size: int,
+) -> Resume:
+
+    parsed_text = extract_resume_text(file_path)
+
+    
+
+    resume = Resume(
+        user_id=current_user.id,
+        title=title,
+        file_name=file_name,
+        file_path=file_path,
+        file_type=file_type,
+        file_size=file_size,
+        parsed_text=parsed_text,
+        is_active=True,
+    )
+
+    db.add(resume)
+    db.commit()
+    db.refresh(resume)
+
+    return resume
+
+def get_my_resumes(
+    db: Session,
+    current_user: User,
+) -> list[Resume]:
+    """
+    Return all resumes owned by the authenticated user.
+    """
+
+    resumes = db.scalars(
+        select(Resume).where(
+            Resume.user_id == current_user.id
+        )
+    ).all()
+
+    return resumes
+
+
+def get_resume_by_id(
+    db: Session,
+    resume_id: UUID,
+    current_user: User,
+) -> Resume:
+    """
+    Return a resume if it belongs to the authenticated user.
+    """
+
+    resume = db.scalar(
+        select(Resume).where(
+            Resume.id == resume_id,
+            Resume.user_id == current_user.id,
+        )
+    )
+
+    if not resume:
+        raise ValueError("Resume not found")
+
+    return resume
+
+
+def update_resume(
+    db: Session,
+    resume: Resume,
+    resume_data: ResumeUpdate,
+) -> Resume:
+    """
+    Update resume details.
+    """
+
+    resume.title = resume_data.title
+
+    db.commit()
+    db.refresh(resume)
+
+    return resume
+
+
+from app.utils.file_storage import delete_file
+
+
+def delete_resume(
+    db: Session,
+    resume: Resume,
+) -> None:
+    """
+    Delete a resume and its uploaded file.
+    """
+
+    delete_file(resume.file_path)
+
+    db.delete(resume)
+    db.commit()
