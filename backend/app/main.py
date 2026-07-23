@@ -5,6 +5,8 @@ from app.api.routers import resume
 from app.api.routers import analysis
 from app.api.routers import dashboard
 from app.api.routers import study_material
+from app.api.routers import admin
+
 
 app = FastAPI(
     title="CampusIQ API",
@@ -14,10 +16,10 @@ app = FastAPI(
 app.include_router(auth_router)
 app.include_router(resume.router)
 app.include_router(analysis.router)
-app.include_router(
-    dashboard.router,
-)
+app.include_router(dashboard.router)
 app.include_router(study_material.router)
+app.include_router(admin.router)
+
 
 @app.get("/")
 def root():
