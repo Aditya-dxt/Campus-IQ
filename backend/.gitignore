@@ -1,29 +1,46 @@
 # Virtual Environment
 .venv/
+venv/
+ENV/
+env/
 
 # Environment Variables
 .env
+.env*.local
 
-# Python
+# Storage & Uploads
+uploads/
+storage/
+chroma/
+*.db
+*.sqlite
+
+# Scratch & Temporary Test Artifacts
+scratch/
+
+# Python Cache & Build Artifacts
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
+build/
+dist/
 
 # IDE
 .vscode/
 .idea/
 
-# Testing
+# Testing & Coverage
 .pytest_cache/
-
-# Coverage
 .coverage
 htmlcov/
+coverage/
 
-# Logs
+# Frontend / JS Artifacts (if any)
+node_modules/
+
+# Logs & OS Artifacts
 *.log
-
-# OS
 .DS_Store
 Thumbs.db

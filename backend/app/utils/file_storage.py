@@ -4,15 +4,23 @@ from uuid import uuid4
 
 from fastapi import UploadFile
 
-# Allowed file extensions
+# Allowed file extensions for CampusIQ document processing
 ALLOWED_EXTENSIONS = {
     ".pdf",
     ".doc",
     ".docx",
+    ".txt",
+    ".pptx",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".tiff",
+    ".bmp",
+    ".md",
 }
 
-# Maximum upload size (5 MB)
-MAX_FILE_SIZE = 5 * 1024 * 1024
+# Maximum upload size (25 MB)
+MAX_FILE_SIZE = 25 * 1024 * 1024
 
 
 def validate_extension(filename: str) -> str:
@@ -29,7 +37,7 @@ def validate_extension(filename: str) -> str:
 
     if extension not in ALLOWED_EXTENSIONS:
         raise ValueError(
-            "Only PDF, DOC, and DOCX files are allowed."
+            f"Unsupported file extension '{extension}'. Allowed: {sorted(ALLOWED_EXTENSIONS)}"
         )
 
     return extension
@@ -45,18 +53,13 @@ def validate_file_size(file: UploadFile) -> int:
     Raises:
         ValueError: If file exceeds maximum size.
     """
-
-    # Move pointer to end
     file.file.seek(0, 2)
-
     file_size = file.file.tell()
-
-    # Reset pointer
     file.file.seek(0)
 
     if file_size > MAX_FILE_SIZE:
         raise ValueError(
-            "File size must not exceed 5 MB."
+            f"File size exceeds maximum limit of {MAX_FILE_SIZE // (1024 * 1024)} MB."
         )
 
     return file_size
@@ -75,7 +78,7 @@ def generate_filename(extension: str) -> str:
 def save_file(
     file: UploadFile,
     filename: str,
-    folder: str = "resumes",
+    folder: str = "study_materials",
 ) -> str:
     """
     Save uploaded file to local storage.
@@ -84,12 +87,10 @@ def save_file(
         file: Uploaded file
         filename: Generated unique filename
         folder: Upload subfolder
-                e.g. 'resumes', 'study_materials'
 
     Returns:
-        Relative file path stored in database.
+        Relative file path stored in system.
     """
-
     upload_dir = Path("uploads") / folder
     upload_dir.mkdir(parents=True, exist_ok=True)
 
@@ -105,8 +106,6 @@ def delete_file(file_path: str) -> None:
     """
     Delete a file from local storage.
     """
-
     path = Path(file_path)
-
     if path.exists():
         path.unlink()
